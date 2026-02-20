@@ -1,4 +1,4 @@
-import * as Accept from '..';
+import * as Accept from '../lib/index.js';
 import * as Lab from '@hapi/lab';
 
 

@@ -1,15 +1,15 @@
-'use strict';
-
-const Accept = require('..');
-const Code = require('@hapi/code');
-const Lab = require('@hapi/lab');
+import * as Accept from '../lib/index.js';
+import * as Code from '@hapi/code';
+import * as Lab from '@hapi/lab';
 
 
 const internals = {};
 
 
-const { describe, it } = exports.lab = Lab.script();
+const lab = Lab.script();
+const { describe, it } = lab;
 const expect = Code.expect;
+export { lab };
 
 /*
     Accept-Charset: iso-8859-5, unicode-1-1;q=0.8
