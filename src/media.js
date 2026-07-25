@@ -1,21 +1,16 @@
-import * as Hoek from '@hapi/hoek';
 import * as Boom from '@hapi/boom';
-
+import * as Hoek from '@hapi/hoek';
 
 const selection = function (header, preferences) {
-
     const results = selections(header, preferences);
     return results.length ? results[0] : '';
 };
 
-
 const selections = function (header, preferences) {
-
     Hoek.assert(!preferences || Array.isArray(preferences), 'Preferences must be an array');
 
     return parse(header, preferences);
 };
-
 
 //      RFC 7231 Section 5.3.2 (https://tools.ietf.org/html/rfc7231#section-5.3.2)
 //
@@ -43,7 +38,6 @@ const selections = function (header, preferences) {
 //      Accept: text/*, text/plain, text/plain;format=flowed, */*
 //      Accept: text/*;q=0.3, text/html;q=0.7, text/html;level=1, text/html;level=2;q=0.4, */*;q=0.5
 
-
 //      RFC 7231 Section 5.3.1 (https://tools.ietf.org/html/rfc7231#section-5.3.1)
 //
 //      The weight is normalized to a real number in the range 0 through 1,
@@ -54,13 +48,11 @@ const selections = function (header, preferences) {
 //       weight = OWS ";" OWS "q=" qvalue
 //       qvalue = ( "0" [ "." 0*3DIGIT ] ) / ( "1" [ "." 0*3("0") ] )
 
-
 //                         */*        type/*                              type/subtype
-const validMediaRx = /^(?:\*\/\*)|(?:[\w\!#\$%&'\*\+\-\.\^`\|~]+\/\*)|(?:[\w\!#\$%&'\*\+\-\.\^`\|~]+\/[\w\!#\$%&'\*\+\-\.\^`\|~]+)$/;
-
+const validMediaRx =
+    /^(?:\*\/\*)|(?:[\w\!#\$%&'\*\+\-\.\^`\|~]+\/\*)|(?:[\w\!#\$%&'\*\+\-\.\^`\|~]+\/[\w\!#\$%&'\*\+\-\.\^`\|~]+)$/;
 
 const parse = function (raw, preferences) {
-
     // Normalize header (remove spaces and temporary remove quoted strings)
 
     const { header, quoted } = normalize(raw);
@@ -73,7 +65,9 @@ const parse = function (raw, preferences) {
 
     for (let i = 0; i < parts.length; ++i) {
         const part = parts[i];
-        if (!part) {                                    // Ignore empty parts or leading commas
+        // Ignore empty parts or leading commas
+
+        if (!part) {
             continue;
         }
 
@@ -82,7 +76,9 @@ const parse = function (raw, preferences) {
         const pairs = part.split(';');
         const token = pairs.shift().toLowerCase();
 
-        if (!validMediaRx.test(token)) {       // Ignore invalid types
+        // Ignore invalid types
+
+        if (!validMediaRx.test(token)) {
             continue;
         }
 
@@ -90,7 +86,7 @@ const parse = function (raw, preferences) {
             token,
             params: {},
             exts: {},
-            pos: i
+            pos: i,
         };
 
         // Parse key=value
@@ -98,31 +94,23 @@ const parse = function (raw, preferences) {
         let target = 'params';
         for (const pair of pairs) {
             const kv = pair.split('=');
-            if (kv.length !== 2 ||
-                !kv[1]) {
-
+            if (kv.length !== 2 || !kv[1]) {
                 throw Boom.badRequest(`Invalid accept header`);
             }
 
             const key = kv[0];
             let value = kv[1];
 
-            if (key === 'q' ||
-                key === 'Q') {
-
+            if (key === 'q' || key === 'Q') {
                 target = 'exts';
 
                 value = parseFloat(value);
-                if (!Number.isFinite(value) ||
-                    value > 1 ||
-                    (value < 0.001 && value !== 0)) {
-
+                if (!Number.isFinite(value) || value > 1 || (value < 0.001 && value !== 0)) {
                     value = 1;
                 }
 
                 item.q = value;
-            }
-            else {
+            } else {
                 if (value[0] === '"') {
                     value = `"${quoted[value]}"`;
                 }
@@ -135,7 +123,9 @@ const parse = function (raw, preferences) {
         item.original = [''].concat(params.map((key) => `${key}=${item.params[key]}`)).join(';');
         item.specificity = params.length;
 
-        if (item.q === undefined) {     // Default no preference to q=1 (top preference)
+        // Default no preference to q=1 (top preference)
+
+        if (item.q === undefined) {
             item.q = 1;
         }
 
@@ -145,7 +135,9 @@ const parse = function (raw, preferences) {
 
         map[item.token] = item;
 
-        if (item.q) {                   // Skip denied selections (q=0)
+        // Skip denied selections (q=0)
+
+        if (item.q) {
             results.push(item);
         }
     }
@@ -157,20 +149,17 @@ const parse = function (raw, preferences) {
     return filterPreferences(map, results, preferences);
 };
 
-
 const normalize = function (raw) {
-
     raw = raw || '*/*';
 
     const normalized = {
         header: raw,
-        quoted: {}
+        quoted: {},
     };
 
     if (raw.includes('"')) {
         let i = 0;
         normalized.header = raw.replace(/="([^"]*)"/g, ($0, $1) => {
-
             const key = '"' + ++i;
             normalized.quoted[key] = $1;
             return '=' + key;
@@ -181,9 +170,7 @@ const normalize = function (raw) {
     return normalized;
 };
 
-
 const sort = function (a, b) {
-
     // Sort by quality score
 
     if (b.q !== a.q) {
@@ -211,9 +198,7 @@ const sort = function (a, b) {
     return a.pos - b.pos;
 };
 
-
 const innerSort = function (a, b, key) {
-
     const aFirst = -1;
     const bFirst = 1;
 
@@ -225,12 +210,10 @@ const innerSort = function (a, b, key) {
         return aFirst;
     }
 
-    return a[key] < b[key] ? aFirst : bFirst;       // Group alphabetically
+    return a[key] < b[key] ? aFirst : bFirst; // Group alphabetically
 };
 
-
 const filterPreferences = function (map, results, preferences) {
-
     // Return selections if no preferences
 
     if (!preferences?.length) {
@@ -293,9 +276,7 @@ const filterPreferences = function (map, results, preferences) {
 
         if (subtype !== '*') {
             const pref = flat[token];
-            if (pref ||
-                (subtypes && subtypes['*'])) {
-
+            if (pref || (subtypes && subtypes['*'])) {
                 preferred.push((pref || token) + item.original);
             }
 
@@ -315,6 +296,5 @@ const filterPreferences = function (map, results, preferences) {
 
     return preferred;
 };
-
 
 export { selection, selections };

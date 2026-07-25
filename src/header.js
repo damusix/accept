@@ -1,21 +1,16 @@
-import * as Hoek from '@hapi/hoek';
 import * as Boom from '@hapi/boom';
-
+import * as Hoek from '@hapi/hoek';
 
 const selection = function (header, preferences, options) {
-
     const results = selections(header, preferences, options);
     return results.length ? results[0] : '';
 };
 
-
 const selections = function (header, preferences, options) {
-
     Hoek.assert(!preferences || Array.isArray(preferences), 'Preferences must be an array');
 
     return parse(header || '', preferences, options);
 };
-
 
 //      RFC 7231 Section 5.3.3 (https://tools.ietf.org/html/rfc7231#section-5.3.3)
 //
@@ -23,7 +18,6 @@ const selections = function (header, preferences, options) {
 //      charset         = token
 //
 //      Accept-Charset: iso-8859-5, unicode-1-1;q=0.8
-
 
 //      RFC 7231 Section 5.3.4 (https://tools.ietf.org/html/rfc7231#section-5.3.4)
 //
@@ -37,7 +31,6 @@ const selections = function (header, preferences, options) {
 //      Accept-Encoding: compress;q=0.5, gzip;q=1.0
 //      Accept-Encoding: gzip;q=1.0, identity; q=0.5, *;q=0
 
-
 //      RFC 7231 Section 5.3.5 (https://tools.ietf.org/html/rfc7231#section-5.3.5)
 //
 //      Accept-Language = *( "," OWS ) ( language-range [ weight ] ) *( OWS "," [ OWS ( language-range [ weight ] ) ] )
@@ -46,14 +39,12 @@ const selections = function (header, preferences, options) {
 //
 //       Accept-Language: da, en-gb;q=0.8, en;q=0.7
 
-
 //      token           = 1*tchar
 //      tchar           = "!" / "#" / "$" / "%" / "&" / "'" / "*"
 //                        / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
 //                        / DIGIT / ALPHA
 //                        ; any VCHAR, except delimiters
 //      OWS             = *( SP / HTAB )
-
 
 //      RFC 7231 Section 5.3.1 (https://tools.ietf.org/html/rfc7231#section-5.3.1)
 //
@@ -65,9 +56,7 @@ const selections = function (header, preferences, options) {
 //       weight = OWS ";" OWS "q=" qvalue
 //       qvalue = ( "0" [ "." 0*3DIGIT ] ) / ( "1" [ "." 0*3("0") ] )
 
-
 const parse = function (raw, preferences, options) {
-
     // Normalize header (remove spaces and tabs)
 
     const header = raw.replace(/[ \t]/g, '');
@@ -83,7 +72,7 @@ const parse = function (raw, preferences, options) {
 
             if (options.prefixMatch) {
                 const parts = lower.split('-');
-                while (parts.pop(), parts.length > 0) {
+                while ((parts.pop(), parts.length > 0)) {
                     const joined = parts.join('-');
                     if (!lowers.has(joined)) {
                         lowers.set(joined, { orig: preference, pos: pos++ });
@@ -101,7 +90,9 @@ const parse = function (raw, preferences, options) {
 
     for (let i = 0; i < parts.length; ++i) {
         const part = parts[i];
-        if (!part) {                            // Ignore empty parts or leading commas
+        // Ignore empty parts or leading commas
+
+        if (!part) {
             continue;
         }
 
@@ -124,12 +115,10 @@ const parse = function (raw, preferences, options) {
         const item = {
             token,
             pos: i,
-            q: 1
+            q: 1,
         };
 
-        if (preferences &&
-            lowers.has(token)) {
-
+        if (preferences && lowers.has(token)) {
             item.pref = lowers.get(token).pos;
         }
 
@@ -141,9 +130,7 @@ const parse = function (raw, preferences, options) {
             const q = params[1];
             const [key, value] = q.split('=');
 
-            if (!value ||
-                key !== 'q' && key !== 'Q') {
-
+            if (!value || (key !== 'q' && key !== 'Q')) {
                 throw Boom.badRequest(`Invalid ${options.type} header`);
             }
 
@@ -152,15 +139,12 @@ const parse = function (raw, preferences, options) {
                 continue;
             }
 
-            if (Number.isFinite(score) &&
-                score <= 1 &&
-                score >= 0.001) {
-
+            if (Number.isFinite(score) && score <= 1 && score >= 0.001) {
                 item.q = score;
             }
         }
 
-        results.push(item);             // Only add allowed selections (q !== 0)
+        results.push(item); // Only add allowed selections (q !== 0)
     }
 
     // Sort selection based on q and then position in header
@@ -171,9 +155,7 @@ const parse = function (raw, preferences, options) {
 
     const values = results.map((item) => item.token);
 
-    if (options.default &&
-        !map.has(options.default)) {
-
+    if (options.default && !map.has(options.default)) {
         values.push(options.default);
     }
 
@@ -189,8 +171,7 @@ const parse = function (raw, preferences, options) {
                     preferred.push(prefValue.orig);
                 }
             }
-        }
-        else {
+        } else {
             const lower = value.toLowerCase();
             if (lowers.has(lower)) {
                 preferred.push(lowers.get(lower).orig);
@@ -201,9 +182,7 @@ const parse = function (raw, preferences, options) {
     return preferred;
 };
 
-
 const sort = function (a, b) {
-
     const aFirst = -1;
     const bFirst = 1;
 
@@ -225,6 +204,5 @@ const sort = function (a, b) {
 
     return a.pos - b.pos;
 };
-
 
 export { selection, selections };

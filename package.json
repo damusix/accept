@@ -4,9 +4,9 @@
     "description": "HTTP Accept-* headers parsing",
     "keywords": [
         "HTTP",
-        "header",
         "accept",
-        "accept-encoding"
+        "accept-encoding",
+        "header"
     ],
     "license": "BSD-3-Clause",
     "repository": "git://github.com/hapijs/accept",
