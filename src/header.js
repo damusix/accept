@@ -2,9 +2,6 @@ import * as Hoek from '@hapi/hoek';
 import * as Boom from '@hapi/boom';
 
 
-const internals = {};
-
-
 const selection = function (header, preferences, options) {
 
     const results = selections(header, preferences, options);
@@ -16,7 +13,7 @@ const selections = function (header, preferences, options) {
 
     Hoek.assert(!preferences || Array.isArray(preferences), 'Preferences must be an array');
 
-    return internals.parse(header || '', preferences, options);
+    return parse(header || '', preferences, options);
 };
 
 
@@ -69,7 +66,7 @@ const selections = function (header, preferences, options) {
 //       qvalue = ( "0" [ "." 0*3DIGIT ] ) / ( "1" [ "." 0*3("0") ] )
 
 
-internals.parse = function (raw, preferences, options) {
+const parse = function (raw, preferences, options) {
 
     // Normalize header (remove spaces and tabs)
 
@@ -168,7 +165,7 @@ internals.parse = function (raw, preferences, options) {
 
     // Sort selection based on q and then position in header
 
-    results.sort(internals.sort);
+    results.sort(sort);
 
     // Extract tokens
 
@@ -205,7 +202,7 @@ internals.parse = function (raw, preferences, options) {
 };
 
 
-internals.sort = function (a, b) {
+const sort = function (a, b) {
 
     const aFirst = -1;
     const bFirst = 1;

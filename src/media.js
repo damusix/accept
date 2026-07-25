@@ -2,9 +2,6 @@ import * as Hoek from '@hapi/hoek';
 import * as Boom from '@hapi/boom';
 
 
-const internals = {};
-
-
 const selection = function (header, preferences) {
 
     const results = selections(header, preferences);
@@ -16,7 +13,7 @@ const selections = function (header, preferences) {
 
     Hoek.assert(!preferences || Array.isArray(preferences), 'Preferences must be an array');
 
-    return internals.parse(header, preferences);
+    return parse(header, preferences);
 };
 
 
@@ -59,14 +56,14 @@ const selections = function (header, preferences) {
 
 
 //                         */*        type/*                              type/subtype
-internals.validMediaRx = /^(?:\*\/\*)|(?:[\w\!#\$%&'\*\+\-\.\^`\|~]+\/\*)|(?:[\w\!#\$%&'\*\+\-\.\^`\|~]+\/[\w\!#\$%&'\*\+\-\.\^`\|~]+)$/;
+const validMediaRx = /^(?:\*\/\*)|(?:[\w\!#\$%&'\*\+\-\.\^`\|~]+\/\*)|(?:[\w\!#\$%&'\*\+\-\.\^`\|~]+\/[\w\!#\$%&'\*\+\-\.\^`\|~]+)$/;
 
 
-internals.parse = function (raw, preferences) {
+const parse = function (raw, preferences) {
 
     // Normalize header (remove spaces and temporary remove quoted strings)
 
-    const { header, quoted } = internals.normalize(raw);
+    const { header, quoted } = normalize(raw);
 
     // Parse selections
 
@@ -85,7 +82,7 @@ internals.parse = function (raw, preferences) {
         const pairs = part.split(';');
         const token = pairs.shift().toLowerCase();
 
-        if (!internals.validMediaRx.test(token)) {       // Ignore invalid types
+        if (!validMediaRx.test(token)) {       // Ignore invalid types
             continue;
         }
 
@@ -155,13 +152,13 @@ internals.parse = function (raw, preferences) {
 
     // Sort selection based on q and then position in header
 
-    results.sort(internals.sort);
+    results.sort(sort);
 
-    return internals.preferences(map, results, preferences);
+    return filterPreferences(map, results, preferences);
 };
 
 
-internals.normalize = function (raw) {
+const normalize = function (raw) {
 
     raw = raw || '*/*';
 
@@ -185,7 +182,7 @@ internals.normalize = function (raw) {
 };
 
 
-internals.sort = function (a, b) {
+const sort = function (a, b) {
 
     // Sort by quality score
 
@@ -196,13 +193,13 @@ internals.sort = function (a, b) {
     // Sort by type
 
     if (a.type !== b.type) {
-        return internals.innerSort(a, b, 'type');
+        return innerSort(a, b, 'type');
     }
 
     // Sort by subtype
 
     if (a.subtype !== b.subtype) {
-        return internals.innerSort(a, b, 'subtype');
+        return innerSort(a, b, 'subtype');
     }
 
     // Sort by specificity
@@ -215,7 +212,7 @@ internals.sort = function (a, b) {
 };
 
 
-internals.innerSort = function (a, b, key) {
+const innerSort = function (a, b, key) {
 
     const aFirst = -1;
     const bFirst = 1;
@@ -232,7 +229,7 @@ internals.innerSort = function (a, b, key) {
 };
 
 
-internals.preferences = function (map, results, preferences) {
+const filterPreferences = function (map, results, preferences) {
 
     // Return selections if no preferences
 
